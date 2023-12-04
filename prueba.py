@@ -14,7 +14,7 @@ class Node:
         self.master_alive = True
         self.master_id = None
         self.neighbors = neighbors
-        self.mutex = threading.Lock()
+        self.mutex = False #threading.Lock()
         self.token_stack = deque()  # Pila de tokens
         self.request_queue = Queue()  # Cola de solicitudes
 
@@ -82,13 +82,16 @@ class Node:
 
     def handle_request_access(self, message):
         with self.mutex:
-            if not self.token_stack:
-                # No hay tokens disponibles, encolar solicitud
-                self.request_queue.put(message['node_id'])
-            else:
-                # Hay un token disponible, enviarlo al nodo que solicitó acceso
-                token = self.token_stack.pop()
-                self.send_token(message['node_id'], token)
+            action = message.get('action')
+            if action == 'request_access':
+                if not self.token_stack:
+                    # No hay tokens disponibles, encolar solicitud
+                    self.request_queue.put(message['node_id'])
+                else:
+                    # Hay un token disponible, enviarlo al nodo que solicitó acceso
+                    token = self.token_stack.pop()
+                    response = {'action': 'grant_access', 'token': token}
+                    self.send_message(message['node_id'], response)
 
     def handle_update_inventory(self, message):
         with self.mutex:
@@ -133,7 +136,56 @@ class Node:
 
     def get_node_address(self, node_id):
         neighbor_port = 5000 + node_id  # Asumiendo que los nodos están en puertos consecutivos
-        return ('127.0.0.1', neighbor_port)
+        return ('192.168.1.104', neighbor_port)
+
+    def recibir_mensajes():
+        mensaje_confirmado = False
+        while True:
+            try:
+                mensaje_recibido, direccion = s.recvfrom(1024)
+                mensaje_decodificado = mensaje_recibido.decode('utf-8')
+                
+                # Decodifica el mensaje JSON
+                mensaje_json = json.loads(mensaje_decodificado)
+
+                timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                mensaje_completo = f"{timestamp} - Mensaje RECIBIDO de {direccion}: {mensaje_json}"
+                mensajes_para_guardar.append(mensaje_completo)
+
+                if not mensaje_confirmado:
+                    # Enviar un mensaje de confirmación al remitente
+                    confirmacion = {"mensaje": "Confirmo la recepcion de tu mensaje"}
+                    s.sendto(json.dumps(confirmacion).encode('utf-8'), direccion)
+                    print(mensaje_completo)
+                    mensaje_confirmado = True
+            except socket.timeout:
+                mensaje_confirmado = False
+
+    def guardar_mensajes():
+        while True:
+            if mensajes_para_guardar:
+                mensaje_para_guardar = mensajes_para_guardar.pop(0)
+                with open("logMensajes.txt", "a") as log_file:
+                    log_file.write(mensaje_para_guardar + "\n")
+                time.sleep(1)  # Espera un segundo antes de intentar guardar el siguiente mensaje
+
+    def enviar_mensajes():
+        while True:
+            destino_ip = input("Ingrese la dirección IP de destino: ")
+            mensaje = input("Ingrese su mensaje: ")
+
+            # Estructura el mensaje como un diccionario JSON
+            mensaje_json = {
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                "mensaje": mensaje
+            }
+
+            mensaje_completo = f"{mensaje_json['timestamp']} - Mensaje ENVIADO a {destino_ip}: {mensaje_json}"
+            
+            # Envía el mensaje a la dirección IP de destino especificada
+            destino_puerto = 12345
+            s.sendto(json.dumps(mensaje_json).encode('utf-8'), (destino_ip, destino_puerto))
+            mensajes_para_guardar.append(mensaje_completo)
 
 # Definir la malla cerrada de nodos (cada nodo tiene un vecino a la izquierda y uno a la derecha)
 neighbors = {1: 2, 2: 3, 3: 4, 4: 5, 5: 1}
@@ -146,11 +198,11 @@ node4 = Node(node_id=4, capacity=80, neighbors=neighbors)
 node5 = Node(node_id=5, capacity=200, neighbors=neighbors)
 
 # Iniciar nodos
-node1.start(host='192.168.253.129', port=5001)
-node2.start(host='192.168.253.130', port=5002)
-node3.start(host='192.168.253.1', port=5003)
-node4.start(host='192.168.253.1', port=5004)
-node5.start(host='192.168.253.1', port=5005)
+node1.start(host='192.168.253.104', port=5001)
+node2.start(host='192.168.1.104', port=5002)
+node3.start(host='192.168.1.104', port=5003)
+node4.start(host='192.168.1.104', port=5004)
+node5.start(host='192.168.1.104', port=5005)
 
 # Esperar a que los hilos finalicen
 node1.server_thread.join()
