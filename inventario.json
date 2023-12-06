@@ -1,0 +1,60 @@
+{
+  "inventario": [
+    {
+      "id": 101,
+      "articulo": "Playera",
+      "categoria": "Ropa",
+      "precio": 500,
+      "cantidad": 50
+    },
+    {
+      "id": 102,
+      "articulo": "Pantalon",
+      "categoria": "Ropa",
+      "precio": 1000,
+      "cantidad": 50
+    },
+    {
+      "id": 103,
+      "articulo": "Tenis",
+      "categoria": "Calzado",
+      "precio": 1500,
+      "cantidad": 30
+    },
+    {
+      "id": 104,
+      "articulo": "Mochila",
+      "categoria": "Accesorio",
+      "precio": 3000,
+      "cantidad": 30
+    },
+    {
+      "id": 105,
+      "articulo": "Celular",
+      "categoria": "Tecnologia",
+      "precio": 8000,
+      "cantidad": 15
+    },
+    {
+      "id": 106,
+      "articulo": "Xbox",
+      "categoria": "Tecnologia",
+      "precio": 11000,
+      "cantidad": 8
+    },
+    {
+      "id": 107,
+      "articulo": "Playstation",
+      "categoria": "Tecnologia",
+      "precio": 12000,
+      "cantidad": 8
+    },
+    {
+      "id": 108,
+      "articulo": "Laptop",
+      "categoria": "Tecnologia",
+      "precio": 10000,
+      "cantidad": 12
+    }
+  ]
+}

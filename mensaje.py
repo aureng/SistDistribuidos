@@ -5,6 +5,14 @@ import time
 
 mensajes_para_guardar = []
 
+class Nodo:
+    def __init__(self):
+        self.inventario = []
+        self.clientes = []
+        self.articulos = []
+
+
+
 def recibir_mensajes():
     mensaje_confirmado = False
     while True:
