@@ -1,60 +1,200 @@
 {
-  "inventario": [
-    {
-      "id": 101,
-      "articulo": "Playera",
-      "categoria": "Ropa",
-      "precio": 500,
-      "cantidad": 50
-    },
-    {
-      "id": 102,
-      "articulo": "Pantalon",
-      "categoria": "Ropa",
-      "precio": 1000,
-      "cantidad": 50
-    },
-    {
-      "id": 103,
-      "articulo": "Tenis",
-      "categoria": "Calzado",
-      "precio": 1500,
-      "cantidad": 30
-    },
-    {
-      "id": 104,
-      "articulo": "Mochila",
-      "categoria": "Accesorio",
-      "precio": 3000,
-      "cantidad": 30
-    },
-    {
-      "id": 105,
-      "articulo": "Celular",
-      "categoria": "Tecnologia",
-      "precio": 8000,
-      "cantidad": 15
-    },
-    {
-      "id": 106,
-      "articulo": "Xbox",
-      "categoria": "Tecnologia",
-      "precio": 11000,
-      "cantidad": 8
-    },
-    {
-      "id": 107,
-      "articulo": "Playstation",
-      "categoria": "Tecnologia",
-      "precio": 12000,
-      "cantidad": 8
-    },
-    {
-      "id": 108,
-      "articulo": "Laptop",
-      "categoria": "Tecnologia",
-      "precio": 10000,
-      "cantidad": 12
-    }
-  ]
+  "101": {
+    "articulo": "Playera",
+    "categoria": "Ropa",
+    "precio": 500,
+    "cantidad": 50,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "102": {
+    "articulo": "Pantalon",
+    "categoria": "Ropa",
+    "precio": 1000,
+    "cantidad": 50,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "103": {
+    "articulo": "Tenis",
+    "categoria": "Calzado",
+    "precio": 1500,
+    "cantidad": 30,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "104": {
+    "articulo": "Mochila",
+    "categoria": "Accesorio",
+    "precio": 3000,
+    "cantidad": 30,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "105": {
+    "articulo": "Celular",
+    "categoria": "Tecnologia",
+    "precio": 8000,
+    "cantidad": 15,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "106": {
+    "articulo": "Xbox",
+    "categoria": "Tecnologia",
+    "precio": 11000,
+    "cantidad": 8,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "107": {
+    "articulo": "Playstation",
+    "categoria": "Tecnologia",
+    "precio": 12000,
+    "cantidad": 8,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "108": {
+    "articulo": "Laptop",
+    "categoria": "Tecnologia",
+    "precio": 10000,
+    "cantidad": 12,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "109": {
+    "articulo": "Camisa Casual",
+    "categoria": "Ropa",
+    "precio": 600,
+    "cantidad": 40,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "110": {
+    "articulo": "Jeans",
+    "categoria": "Ropa",
+    "precio": 1200,
+    "cantidad": 35,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "111": {
+    "articulo": "Zapatos Deportivos",
+    "categoria": "Calzado",
+    "precio": 1800,
+    "cantidad": 25,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "112": {
+    "articulo": "Bolso de Moda",
+    "categoria": "Accesorio",
+    "precio": 2500,
+    "cantidad": 20,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "113": {
+    "articulo": "Smartwatch",
+    "categoria": "Tecnologia",
+    "precio": 3500,
+    "cantidad": 10,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "114": {
+    "articulo": "Consola de Juegos Portatil",
+    "categoria": "Tecnologia",
+    "precio": 8000,
+    "cantidad": 5,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "115": {
+    "articulo": "Auriculares Inalambricos",
+    "categoria": "Tecnologia",
+    "precio": 1200,
+    "cantidad": 15,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "116": {
+    "articulo": "Mesa Plegable",
+    "categoria": "Muebles",
+    "precio": 1500,
+    "cantidad": 20,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "117": {
+    "articulo": "Plancha de Ropa",
+    "categoria": "Electrodomésticos",
+    "precio": 700,
+    "cantidad": 30,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  },
+  "118": {
+    "articulo": "Set de Toallas",
+    "categoria": "Baño",
+    "precio": 400,
+    "cantidad": 25,
+    "Inv1": 0,
+    "Inv2": 0,
+    "Inv3": 0,
+    "Inv4": 0,
+    "Inv5": 0
+  }
 }

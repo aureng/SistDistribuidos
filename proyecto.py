@@ -56,21 +56,23 @@ class Node:
             while True:
                 mensaje_recibido, direccion = server_socket.recvfrom(1024)
                 mensaje_decodificado = mensaje_recibido.decode('utf-8')
-                timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-                mensaje_completo = f"{timestamp} - Mensaje RECIBIDO de {direccion}: {mensaje_decodificado}"
-                print(mensaje_completo)
 
-                # Procesar el mensaje según la acción
-                message = json.loads(mensaje_decodificado)
-                action = message.get('action')
+                # Add timestamp, node, and action to the message
+                timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                message_data = json.loads(mensaje_decodificado)
+                message_data['time'] = timestamp
+                message_data['node'] = self.node_id
+                action = message_data.get('action')
+
+                # Further processing based on the action
                 if action == 'request_access':
-                    self.handle_request_access(message)
+                    self.handle_request_access(message_data)
                 elif action == 'update_inventory':
-                    self.handle_update_inventory(message)
+                    self.handle_update_inventory(message_data)
                 elif action == 'get_inventory':
-                    self.handle_get_inventory(direccion)
+                    self.handle_get_inventory(direccion, message_data)
                 elif action == 'buy_item':
-                    self.handle_buy_item(message)
+                    self.handle_buy_item(message_data)
 
     def start_client(self):
         while True:
@@ -149,7 +151,7 @@ class Node:
                     node_id = self.request_queue.get()
                     self.send_token(node_id, new_token)
 
-    def recibir_mensajes():
+    def recibir_mensajes(self):
         mensaje_confirmado = False
         while True:
             try:
@@ -172,7 +174,7 @@ class Node:
             except socket.timeout:
                 mensaje_confirmado = False
 
-    def guardar_mensajes():
+    def guardar_mensajes(self):
         while True:
             if mensajes_para_guardar:
                 mensaje_para_guardar = mensajes_para_guardar.pop(0)
@@ -180,7 +182,7 @@ class Node:
                     log_file.write(mensaje_para_guardar + "\n")
                 time.sleep(1)  # Espera un segundo antes de intentar guardar el siguiente mensaje
 
-    def enviar_mensajes():
+    def enviar_mensajes(self):
         while True:
             destino_ip = input("Ingrese la dirección IP de destino: ")
             mensaje = input("Ingrese su mensaje: ")
@@ -198,10 +200,13 @@ class Node:
             mensajes_para_guardar.append(mensaje_completo)
 
     def consultar(self, nodo):
+        pass
 
     def vender(self, item_id, cantidad):
+        pass
 
     def agregar(self, item_id, cantidad):
+        pass
 
 #Funcion para hacer la seleccion de comando (Punto de vista del usuario que controla todo)
 def sel_comando():
@@ -257,13 +262,13 @@ def get_local_ip():
         return None
 
 def main():
-    node = Node(node_id=lista_ip_nodo[get_local_ip()], capacity=get_random_integer())
+    global node
+    node = Node(node_id=Node.lista_ip_nodo[get_local_ip()], capacity=get_random_integer())
     node.start(host= get_local_ip())
 
-if __name__ == "__main__":
-    main()
     while True:
         sel_comando()
+
 
 
 # Crear instancias de nodos
