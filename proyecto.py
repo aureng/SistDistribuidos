@@ -284,7 +284,7 @@ def main():
 #node5.start(host='192.168.1.104', port=5005)
 
 # Esperar a que los hilos finalicen
-node1.server_thread.join()
-node1.client_thread.join()
-node1.check_master_thread.join()
-node1.token_thread.join()
+# node1.server_thread.join()
+# node1.client_thread.join()
+# node1.check_master_thread.join()
+# node1.token_thread.join()
