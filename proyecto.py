@@ -146,7 +146,7 @@ class Node:
         mensaje_confirmado = False
         while True:
             try:
-                mensaje_recibido, direccion = s.recvfrom(1024)
+                mensaje_recibido, direccion = server_socket.recvfrom(1024)
                 mensaje_decodificado = mensaje_recibido.decode('utf-8')
                 
                 # Decodifica el mensaje JSON
@@ -204,7 +204,7 @@ class Node:
         while True:
             heartbeat_msg = "Heartbeat"
             with master_lock:
-                if (get_local_ip(), 5000) == master_node:
+                if (self.host, self.port) == master_node:
                     heartbeat_msg += ":Master"
             for node in NODES:
                 try:
@@ -218,7 +218,7 @@ class Node:
         global master_node
         while True:
             try:
-                data, addr = s.recvfrom(1024)
+                data, addr = server_socket.recvfrom(1024)
                 last_heartbeat[addr] = time.time()
                 if "Master" in data.decode():
                     with master_lock:
