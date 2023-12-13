@@ -52,8 +52,9 @@ class Node:
         self.token_thread.start()
 
         self.send_thread = threading.Thread(target=self.send_heartbeats)
-        self.receive_thread = threading.Thread(target=self.receive_heartbeats_modified)
         self.send_thread.start()
+
+        self.receive_thread = threading.Thread(target=self.receive_heartbeats_modified)
         self.receive_thread.start()
 
     def start_server(self):
@@ -103,18 +104,6 @@ class Node:
     def elect_master(self):
         # Implementar lógica de elección de nuevo nodo maestro
         pass
-
-    def handle_request_access(self, message):
-        action = message.get('action')
-        if action == 'request_access':
-            if not self.token_stack:
-                # No hay tokens disponibles, encolar solicitud
-                self.request_queue.put(message['node_id'])
-            else:
-                # Hay un token disponible, enviarlo al nodo que solicitó acceso
-                token = self.token_stack.pop()
-                response = {'action': 'grant_access', 'token': token}
-                self.send_message(message['node_id'], response)
 
     def handle_update_inventory(self, message):
         # Implementar lógica de consenso para actualizar el inventario
@@ -229,7 +218,7 @@ class Node:
         global master_node
         while True:
             try:
-                data, addr = sock.recvfrom(1024)
+                data, addr = s.recvfrom(1024)
                 last_heartbeat[addr] = time.time()
                 if "Master" in data.decode():
                     with master_lock:
