@@ -204,7 +204,7 @@ class Node:
         while True:
             heartbeat_msg = "Heartbeat"
             with master_lock:
-                if (mi_ip, 5000) == master_node:
+                if (get_local_ip(), 5000) == master_node:
                     heartbeat_msg += ":Master"
             for node in NODES:
                 try:
