@@ -22,6 +22,10 @@ class Node:
     lista_nodo_ip = {1:"192.168.253.129",2:"192.168.253.130",3:"192.168.253.132",4:"192.168.253.133",5:"192.168.253.134"}
 
     def __init__(self, node_id, capacity):
+        self.last_heartbeat = {}  # Inicializar el registro de heartbeats
+        self.master_lock = threading.Lock()  # Inicializar el lock
+        self.master_node = None  # Inicializar el nodo maestro
+        self.token_stack = deque()  # Inicializar la pila de tokens
         self.node_id = node_id
         self.capacity = capacity
         self.inventory = {}
@@ -30,6 +34,7 @@ class Node:
         self.master_id = None
         self.neighbors = None   #Exclusivamente para consenso y decisiones (Mensajeria entre nodos)
         self.access = False
+        self.failed_nodes = set()
         self.request_queue = Queue()  # Cola de solicitudes
 
     def make_master(self, node_id):
@@ -38,6 +43,12 @@ class Node:
     def start(self, host):
         self.host = host
         self.port = 5000
+
+        send_thread = threading.Thread(target=self.send_heartbeats)
+        receive_thread = threading.Thread(target=self.receive_heartbeats_modified)
+
+        send_thread.start()
+        receive_thread.start()
 
         self.server_thread = threading.Thread(target=self.start_server)
         self.server_thread.start()
@@ -56,6 +67,8 @@ class Node:
 
         self.receive_thread = threading.Thread(target=self.receive_heartbeats_modified)
         self.receive_thread.start()
+
+    
 
     def start_server(self):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
@@ -159,7 +172,7 @@ class Node:
                 if not mensaje_confirmado:
                     # Enviar un mensaje de confirmación al remitente
                     confirmacion = {"mensaje": "Confirmo la recepcion de tu mensaje"}
-                    s.sendto(json.dumps(confirmacion).encode('utf-8'), direccion)
+                    socket.sendto(json.dumps(confirmacion).encode('utf-8'), direccion)
                     print(mensaje_completo)
                     mensaje_confirmado = True
             except socket.timeout:
@@ -187,7 +200,7 @@ class Node:
 
             # Envía el mensaje a la dirección IP de destino especificada
             destino_puerto = 5000
-            s.sendto(json.dumps(mensaje_json).encode('utf-8'), (destino_ip, destino_puerto))
+            socket.sendto(json.dumps(mensaje_json).encode('utf-8'), (destino_ip, destino_puerto))
             mensajes_para_guardar.append(mensaje_completo)
 
     def consultar(self, nodo):
@@ -199,156 +212,134 @@ class Node:
     def agregar(self, item_id, cantidad):
         pass
 
-    def send_heartbeats(self):
-        global master_node
-        while True:
-            heartbeat_msg = "Heartbeat"
-            with master_lock:
-                if (self.host, self.port) == master_node:
-                    heartbeat_msg += ":Master"
-            for node in NODES:
-                try:
-                    sock.sendto(heartbeat_msg.encode(), node)
-                except Exception as e:
-                    print(f"Error al enviar heartbeat a {node}: {e}")
-            time.sleep(HEARTBEAT_INTERVAL)
+    def is_master(self):
+        # Comprueba si este nodo es el maestro
+        return self.node_id == self.master_node
+    
+    def handle_node_failure(self, node_ip):#######################################################
+        if node_ip not in self.failed_nodes:
+            # Acciones a realizar cuando se detecta un nodo caído por primera vez
+            print(f"Nodo caído detectado: {node_ip}")
+            # Implementar acciones específicas por la caída del nodo
+            self.failed_nodes.add(node_ip)  # Agrega el nodo al conjunto de nodos caídos
 
-    # Esta función recibe heartbeats y actualiza el estado de los nodos
-    def receive_heartbeats_modified(self):
-        global master_node
-        while True:
+    def load_inventory_from_file(file_path="inventario.json"):
             try:
-                data, addr = server_socket.recvfrom(1024)
-                last_heartbeat[addr] = time.time()
-                if "Master" in data.decode():
-                    with master_lock:
-                        if addr != master_node:
-                            print(f"Nuevo nodo maestro elegido: {addr}")
-                            master_node = addr
-                print(f"Heartbeat recibido de {addr}, nodo activo")
-            except socket.timeout:
+                with open(file_path, "r") as file:
+                    inventory_data = json.load(file)
+                return inventory_data
+            except FileNotFoundError:
+                print(f"Error: File '{file_path}' not found.")
+                return None
+            except json.JSONDecodeError:
+                print(f"Error: Unable to decode JSON in file '{file_path}'.")
+                return None
+
+    def send_heartbeats(self):
+                while True:
+                    heartbeat_msg = "Heartbeat"
+                    if self.is_master():
+                        heartbeat_msg += ":Master" ##AQUI PUEDE REALIZAR FUNCIONES EL NODO MAESTRO ########################################
+                    for node_ip in self.lista_ip_nodo:
+                        try:
+                            self.sock.sendto(heartbeat_msg.encode(), (node_ip, self.port))
+                        except Exception as e:
+                            print(f"Error al enviar heartbeat a {node_ip}: {e}")
+                            pass
+                    time.sleep(HEARTBEAT_INTERVAL)
+
+        # Esta función recibe heartbeats y actualiza el estado de los nodos
+    def receive_heartbeats_modified(self):
+                while True:
+                    current_time = time.time()
+                    for node_ip, last_hb_time in list(self.last_heartbeat.items()):
+                        if current_time - last_hb_time > MAX_INACTIVE_TIME and node_ip != self.host:
+                            self.handle_node_failure(node_ip)
+                            # Actualiza el último heartbeat para evitar múltiples detecciones
+                            self.last_heartbeat[node_ip] = current_time
+                    try:
+                        data, addr = self.server_socket.recvfrom(1024)
+                        self.last_heartbeat[addr] = time.time()
+                        if "Master" in data.decode():
+                            if addr != self.master_node:
+                                print(f"Nuevo nodo maestro elegido: {addr}")
+                                self.master_node = addr
+                        #print(f"Heartbeat recibido de {addr}, nodo activo")
+                    except socket.timeout:
+                        pass
+                    self.determine_master()
                 pass
+            # Función para determinar el nodo maestro
 
-            # Verificar nodos inactivos y actualizar el nodo maestro
-            determine_master()
+    def determine_master(self):
+                with self.master_lock:
+                    current_time = time.time()
+                    active_nodes = {ip: self.last_heartbeat[ip] for ip in self.lista_ip_nodo if current_time - self.last_heartbeat.get(ip, 0) <= MAX_INACTIVE_TIME}
+                    if active_nodes:
+                        highest_ip = max(active_nodes.keys())
+                        if highest_ip != self.master_node:
+                            self.master_node = highest_ip
+                            print(f"El nodo maestro actual es: {self.master_node}")
 
-    # Función para determinar el nodo maestro
-    def determine_master():
-        global master_node
-        with master_lock:
-            active_nodes = {node: last_heartbeat[node] for node in NODES if time.time() - last_heartbeat.get(node, 0) <= MAX_INACTIVE_TIME}
-            if active_nodes:
-                highest_ip = max(active_nodes.keys())
-                if highest_ip != master_node:
-                    master_node = highest_ip
-                    print(f"El nodo maestro actual es: {master_node}")
 
-    def load_inventory_from_file(self, file_path="inventario.json"):
-        try:
-            with open(file_path, "r") as file:
-                inventory_data = json.load(file)
-            return inventory_data
-        except FileNotFoundError:
-            print(f"Error: File '{file_path}' not found.")
-            return None
-        except json.JSONDecodeError:
-            print(f"Error: Unable to decode JSON in file '{file_path}'.")
-            return None
-
-#Funcion para hacer la seleccion de comando (Punto de vista del usuario que controla todo)
+    #Funcion para hacer la seleccion de comando (Punto de vista del usuario que controla todo)
 def sel_comando():
-    comando = input("Escribe un comando:").split()
-    if not comando:
-        pass
-    elif(comando[0].startswith("/")):
-        seleccion = comando[0]
-        seleccion = seleccion[1:]
-        if seleccion == "help":
-            print("""La lista de comandos es:
-    /consultar {nodo} #Regresa el listado de id, articulo y cantidad, del nodo, en pantalla
-    /vender {item_id} {cantidad} #Regresa un "ticket" en pantalla con (IDARTICULO+SERIE+SUCURSAL+IDCLIENTE)
-    /agregar {item_id} {cantidad} #Regresa una confirmacion en pantalla de que fue agregado exitosamente
-Gracias""")
-        elif seleccion == "consultar":
-            if (len(comando) == 2):
-                node.consultar(comando[1])
+        comando = input("Escribe un comando:").split()
+        if not comando:
+            pass
+        elif(comando[0].startswith("/")):
+            seleccion = comando[0]
+            seleccion = seleccion[1:]
+            if seleccion == "help":
+                print("""La lista de comandos es:
+        /consultar {nodo} #Regresa el listado de id, articulo y cantidad, del nodo, en pantalla
+        /vender {item_id} {cantidad} #Regresa un "ticket" en pantalla con (IDARTICULO+SERIE+SUCURSAL+IDCLIENTE)
+        /agregar {item_id} {cantidad} #Regresa una confirmacion en pantalla de que fue agregado exitosamente
+    Gracias""")
+            elif seleccion == "consultar":
+                if (len(comando) == 2):
+                    node.consultar(comando[1])
+                else:
+                    print("Especifica el nodo a consultar el inventario")
+            elif seleccion == "vender":
+                if (len(comando) == 3):
+                    node.vender(comando[1],comando[2])
+                else:
+                    print("Especifica el id del item y la cantidad a vender")
+            elif seleccion == "agregar":
+                if (len(comando) == 3):
+                    node.agregar(comando[1],comando[2])
+                else:
+                    print("Especifica el id del item y la cantidad a agregar")
             else:
-                print("Especifica el nodo a consultar el inventario")
-        elif seleccion == "vender":
-            if (len(comando) == 3):
-                node.vender(comando[1],comando[2])
-            else:
-                print("Especifica el id del item y la cantidad a vender")
-        elif seleccion == "agregar":
-            if (len(comando) == 3):
-                node.agregar(comando[1],comando[2])
-            else:
-                print("Especifica el id del item y la cantidad a agregar")
+                print("Comando no valido. Escribe /help para mayor informacion")
         else:
             print("Comando no valido. Escribe /help para mayor informacion")
-    else:
-        print("Comando no valido. Escribe /help para mayor informacion")
 
-#Funcion de apoyo para automatizar la capacidad en un mismo codigo
+    #Funcion de apoyo para automatizar la capacidad en un mismo codigo
 def get_random_integer():
-    pool = [100, 120, 150, 200, 230, 250]
-    random_integer = random.choice(pool)
-    return random_integer
+        pool = [100, 120, 150, 200, 230, 250]
+        random_integer = random.choice(pool)
+        return random_integer
 
-#Funcion exclusivamente para conseguir el ip local
+    #Funcion exclusivamente para conseguir el ip local
 def get_local_ip():
-    try:
-        # Create a socket connection to an external server
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))  # Connecting to Google's public DNS server
-        local_ip = s.getsockname()[0]
-        s.close()
-        return local_ip
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
+        try:
+            # Create a socket connection to an external server
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))  # Connecting to Google's public DNS server
+            local_ip = s.getsockname()[0]
+            s.close()
+            return local_ip
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
 
 def main():
-    node = Node(node_id=Node.lista_ip_nodo[get_local_ip()], capacity=get_random_integer())
-    node.start(host= get_local_ip())
-
-    # Registro de la última vez que se recibió un heartbeat de cada nodo
-    last_heartbeat = {}
-
-    # Lock para control de acceso concurrente al nodo maestro
-    master_lock = threading.Lock()
-
-    # Nodo maestro actual
-    master_node = None
-
-    # Iniciar hilos para enviar y recibir heartbeats
-    send_thread = threading.Thread(target=send_heartbeats)
-    receive_thread = threading.Thread(target=receive_heartbeats_modified)
-    send_thread.start()
-    receive_thread.start()
-
-    send_thread.join()
-    receive_thread.join()
-
-    while True:
-        sel_comando()
+        node = Node(node_id=Node.lista_ip_nodo[get_local_ip()], capacity=get_random_integer())
+        node.start(host= get_local_ip())
+        # Iniciar hilos para enviar y recibir heartbeats
+        while True:
+            sel_comando()
 
 main()
-
-# Crear instancias de nodos
-#node2 = Node(node_id=2, capacity=150, neighbors=neighbors)
-#node3 = Node(node_id=3, capacity=120, neighbors=neighbors)
-#node4 = Node(node_id=4, capacity=80, neighbors=neighbors)
-#node5 = Node(node_id=5, capacity=200, neighbors=neighbors)
-
-# Iniciar nodos
-#node2.start(host='192.168.1.104', port=5002)
-#node3.start(host='192.168.1.104', port=5003)
-#node4.start(host='192.168.1.104', port=5004)
-#node5.start(host='192.168.1.104', port=5005)
-
-# Esperar a que los hilos finalicen
-# node1.server_thread.join()
-# node1.client_thread.join()
-# node1.check_master_thread.join()
-# node1.token_thread.join()
