@@ -242,7 +242,7 @@ class Node:
                         heartbeat_msg += ":Master" ##AQUI PUEDE REALIZAR FUNCIONES EL NODO MAESTRO ########################################
                     for node_ip in self.lista_ip_nodo:
                         try:
-                            self.sock.sendto(heartbeat_msg.encode(), (node_ip, self.port))
+                            server_socket.sendto(heartbeat_msg.encode(), (node_ip, self.port))
                         except Exception as e:
                             print(f"Error al enviar heartbeat a {node_ip}: {e}")
                             pass
