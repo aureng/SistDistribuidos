@@ -6,8 +6,6 @@ import random
 from collections import deque
 from queue import Queue
 
-HEARTBEAT_INTERVAL = 2
-MAX_INACTIVE_TIME = 5
 # Clase Nodo deberia tener la capacidad de responder y hacer todo si fuera "maestro"
 # De no ser asi, envia peticiones al nodo maestro, cada nodo sabe quien es el nodo maestro 
 # Cada nodo tiene exclusivamente un nodo vecino
@@ -50,12 +48,6 @@ class Node:
 
         self.token_thread = threading.Thread(target=self.token_handler)
         self.token_thread.start()
-
-        self.send_thread = threading.Thread(target=self.send_heartbeats)
-        self.send_thread.start()
-
-        self.receive_thread = threading.Thread(target=self.receive_heartbeats_modified)
-        self.receive_thread.start()
 
     def start_server(self):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
@@ -191,57 +183,13 @@ class Node:
             mensajes_para_guardar.append(mensaje_completo)
 
     def consultar(self, nodo):
-        print(load_inventory_from_file())
+        pass
 
     def vender(self, item_id, cantidad):
         pass
 
     def agregar(self, item_id, cantidad):
         pass
-
-    def send_heartbeats(self):
-        global master_node
-        while True:
-            heartbeat_msg = "Heartbeat"
-            with master_lock:
-                if (self.host, self.port) == master_node:
-                    heartbeat_msg += ":Master"
-            for node in NODES:
-                try:
-                    sock.sendto(heartbeat_msg.encode(), node)
-                except Exception as e:
-                    print(f"Error al enviar heartbeat a {node}: {e}")
-            time.sleep(HEARTBEAT_INTERVAL)
-
-    # Esta función recibe heartbeats y actualiza el estado de los nodos
-    def receive_heartbeats_modified(self):
-        global master_node
-        while True:
-            try:
-                data, addr = server_socket.recvfrom(1024)
-                last_heartbeat[addr] = time.time()
-                if "Master" in data.decode():
-                    with master_lock:
-                        if addr != master_node:
-                            print(f"Nuevo nodo maestro elegido: {addr}")
-                            master_node = addr
-                print(f"Heartbeat recibido de {addr}, nodo activo")
-            except socket.timeout:
-                pass
-
-            # Verificar nodos inactivos y actualizar el nodo maestro
-            determine_master()
-
-    # Función para determinar el nodo maestro
-    def determine_master():
-        global master_node
-        with master_lock:
-            active_nodes = {node: last_heartbeat[node] for node in NODES if time.time() - last_heartbeat.get(node, 0) <= MAX_INACTIVE_TIME}
-            if active_nodes:
-                highest_ip = max(active_nodes.keys())
-                if highest_ip != master_node:
-                    master_node = highest_ip
-                    print(f"El nodo maestro actual es: {master_node}")
 
     def load_inventory_from_file(self, file_path="inventario.json"):
         try:
@@ -311,24 +259,6 @@ def get_local_ip():
 def main():
     node = Node(node_id=Node.lista_ip_nodo[get_local_ip()], capacity=get_random_integer())
     node.start(host= get_local_ip())
-
-    # Registro de la última vez que se recibió un heartbeat de cada nodo
-    last_heartbeat = {}
-
-    # Lock para control de acceso concurrente al nodo maestro
-    master_lock = threading.Lock()
-
-    # Nodo maestro actual
-    master_node = None
-
-    # Iniciar hilos para enviar y recibir heartbeats
-    send_thread = threading.Thread(target=send_heartbeats)
-    receive_thread = threading.Thread(target=receive_heartbeats_modified)
-    send_thread.start()
-    receive_thread.start()
-
-    send_thread.join()
-    receive_thread.join()
 
     while True:
         sel_comando()
