@@ -128,11 +128,11 @@ class Node:
             if not self.token_stack and not self.request_queue.empty():
                 # Si no hay tokens disponibles y hay solicitudes en la cola, generar un nuevo token
                 new_token = f'Token-{time.time()}'
-                self.token_stack.append(new_token)
+                #self.token_stack.append(new_token)
 
                 # Desencolar la solicitud y enviar el token al nodo que solicitó acceso
                 node_id = self.request_queue.get()
-                self.send_token(node_id, new_token)
+                #self.send_token(node_id, new_token)
 
     def recibir_mensajes(self):
         mensaje_confirmado = False
