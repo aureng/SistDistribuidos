@@ -191,7 +191,7 @@ class Node:
             mensajes_para_guardar.append(mensaje_completo)
 
     def consultar(self, nodo):
-        pass
+        print(load_inventory_from_file())
 
     def vender(self, item_id, cantidad):
         pass
