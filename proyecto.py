@@ -183,6 +183,7 @@ class Node:
             mensajes_para_guardar.append(mensaje_completo)
 
     def consultar(self, nodo):
+        print(Node.load_inventory_from_file())
         pass
 
     def vender(self, item_id, cantidad):
@@ -219,17 +220,17 @@ def sel_comando():
 Gracias""")
         elif seleccion == "consultar":
             if (len(comando) == 2):
-                node.consultar(comando[1])
+                Node.consultar(comando[1])
             else:
                 print("Especifica el nodo a consultar el inventario")
         elif seleccion == "vender":
             if (len(comando) == 3):
-                node.vender(comando[1],comando[2])
+                Node.vender(comando[1],comando[2])
             else:
                 print("Especifica el id del item y la cantidad a vender")
         elif seleccion == "agregar":
             if (len(comando) == 3):
-                node.agregar(comando[1],comando[2])
+                Node.agregar(comando[1],comando[2])
             else:
                 print("Especifica el id del item y la cantidad a agregar")
         else:
